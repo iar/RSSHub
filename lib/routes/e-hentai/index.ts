@@ -1,14 +1,22 @@
+import { Route } from '@/types';
 import { getCurrentPath } from '@/utils/helpers';
 const __dirname = getCurrentPath(import.meta.url);
 
 import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { load } from 'cheerio';
-import * as path from 'node:path';
+import path from 'node:path';
 import { art } from '@/utils/render';
 import { parseDate } from '@/utils/parse-date';
 
-export default async (ctx) => {
+export const route: Route = {
+    path: '/:what?/:id?/:needTorrents?/:needImages?',
+    name: 'Unknown',
+    maintainers: [],
+    handler,
+};
+
+async function handler(ctx) {
     const id = ctx.req.param('id') ?? '';
     const what = ctx.req.param('what') ?? '';
     const needTorrents = /t|y/i.test(ctx.req.param('needTorrents') ?? 'true');
@@ -27,7 +35,7 @@ export default async (ctx) => {
     $('.itd').parent().remove();
 
     let items = $('table.gltc tbody tr')
-        .slice(1, ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) + 1 : needImages ? 16 : 26)
+        .slice(1, ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) + 1 : (needImages ? 16 : 26))
         .toArray()
         .map((item) => {
             item = $(item);
@@ -111,9 +119,9 @@ export default async (ctx) => {
         })
     );
 
-    ctx.set('data', {
+    return {
         title: `${id || what || 'Front Page'} - E-Hentai Galleries`,
         link: currentUrl,
         item: items,
-    });
-};
+    };
+}

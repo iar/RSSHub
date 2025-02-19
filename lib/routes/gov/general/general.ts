@@ -104,7 +104,7 @@ const gdgov = async (info, ctx) => {
 
     path.splice(0, 2 + pathstartat);
     let pathname = path.join('/');
-    pathname = pathname === '' ? defaultPath : pathname.endsWith('/') ? pathname : pathname + '/';
+    pathname = pathname === '' ? defaultPath : (pathname.endsWith('/') ? pathname : pathname + '/');
     const currentUrl = `${rootUrl}/${pathname}`;
 
     let $ = '';
@@ -230,11 +230,11 @@ const gdgov = async (info, ctx) => {
         })
     );
 
-    ctx.set('data', {
+    return {
         title: name,
         link: currentUrl,
         item: items,
-    });
+    };
 };
 
 export { gdgov };

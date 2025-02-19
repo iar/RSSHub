@@ -1,9 +1,23 @@
+import { Route } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
 
-export default async (ctx) => {
+export const route: Route = {
+    path: '/:category?',
+    name: '文章',
+    maintainers: ['nczitzk', 'pseudoyu'],
+    categories: ['new-media', 'popular'],
+    example: '/dedao',
+    parameters: { category: '分类，见下表，默认为`news`' },
+    description: `| 新闻 | 人物故事 | 视频 |
+| ---- | ---- | ---- |
+| news | figure | video |`,
+    handler,
+};
+
+async function handler(ctx) {
     const category = ctx.req.param('category') ?? 'news';
 
     const rootUrl = `https://www.igetget.com/${category === 'video' ? 'video' : 'news'}`;
@@ -15,10 +29,10 @@ export default async (ctx) => {
 
     const data = JSON.parse(response.data.match(/window.__INITIAL_STATE__= (.*);<\/script>/)[1]);
 
-    let items = (category === 'news' ? data.news : category === 'figure' ? data.figure : data.videoList).map((item) => ({
+    let items = (category === 'news' ? data.news : (category === 'figure' ? data.figure : data.videoList)).map((item) => ({
         title: item.title,
         pubDate: parseDate(item.online_time),
-        link: `${rootUrl}/${category === 'news' ? 'article/' : category === 'figure' ? 'people/' : ''}${item.online_time.split('T')[0].split('-').join('')}/${item.token}`,
+        link: `${rootUrl}/${category === 'news' ? 'article/' : (category === 'figure' ? 'people/' : '')}${item.online_time.split('T')[0].split('-').join('')}/${item.token}`,
     }));
 
     items = await Promise.all(
@@ -38,10 +52,10 @@ export default async (ctx) => {
         )
     );
 
-    ctx.set('data', {
-        title: `得到${category === 'video' ? '' : '大事件'} - ${category === 'news' ? '新闻' : category === 'figure' ? '人物故事' : '视频'}`,
+    return {
+        title: `得到${category === 'video' ? '' : '大事件'} - ${category === 'news' ? '新闻' : (category === 'figure' ? '人物故事' : '视频')}`,
         link: rootUrl,
         item: items,
         description: data.description,
-    });
-};
+    };
+}
